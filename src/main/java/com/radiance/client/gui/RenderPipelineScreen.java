@@ -63,6 +63,7 @@ public class RenderPipelineScreen extends Screen {
 
     private ButtonWidget modeToggleBtn;
     private ButtonWidget secondaryBtn;
+    private boolean isDirty = false;
 
     private static final String RENDER_PIPELINE_PRESET_NAME = "render_pipeline.preset.name";
     private static final String RENDER_PIPELINE_MODE_NAME = "render_pipeline.mode.name";
@@ -144,6 +145,7 @@ public class RenderPipelineScreen extends Screen {
                     Pipeline.preparePipelineModeUI();
                     mode = Mode.PIPELINE;
                 }
+                isDirty = false;
                 rebuildUI();
             }).dimensions(toggleX, 6, toggleW, 20).build());
 
@@ -189,6 +191,7 @@ public class RenderPipelineScreen extends Screen {
                 } else {
                     applyActivePreset();
                 }
+                isDirty = false;
             }).dimensions(secondaryX + secondaryW + 110, 6, 100, 20).build());
 
         saveBtn.active = true;
@@ -238,15 +241,18 @@ public class RenderPipelineScreen extends Screen {
         }
 
         Pipeline.build();
+        isDirty = false;
         refreshPipeline();
     }
 
     @Override
     public void close() {
-        if (mode == Mode.PIPELINE) {
-            syncToPipeline();
-        } else {
-            syncPresetToPipeline();
+        if (isDirty) {
+            if (mode == Mode.PIPELINE) {
+                syncToPipeline();
+            } else {
+                syncPresetToPipeline();
+            }
         }
         MinecraftClient.getInstance().setScreen(parent);
     }
@@ -554,6 +560,7 @@ public class RenderPipelineScreen extends Screen {
                 if (!testCycle(src, dst)) {
                     moduleConnections.removeIf(link -> link.dst == dst);
                     moduleConnections.add(new ModuleConnection(src, dst));
+                    isDirty = true;
                 }
             }
             pendingPort = null;
@@ -607,6 +614,7 @@ public class RenderPipelineScreen extends Screen {
     }
 
     private void deleteNode(ModuleNode node) {
+        isDirty = true;
         nodes.remove(node);
         moduleConnections.removeIf(
             link -> link.src.owner == node.module || link.dst.owner == node.module);
@@ -680,6 +688,7 @@ public class RenderPipelineScreen extends Screen {
                     if (isConnected) {
                         moduleConnections.removeIf(
                             link -> link.src == current || link.dst == current);
+                        isDirty = true;
                     } else if (clickedOut != null) {
                         if (localFinalOutput != null && localFinalOutput != current) {
                             localFinalOutput.finalOutput = false;
@@ -687,6 +696,7 @@ public class RenderPipelineScreen extends Screen {
 
                         localFinalOutput = (localFinalOutput == current) ? null : current;
                         current.finalOutput = (localFinalOutput == current);
+                        isDirty = true;
                     }
                     return true;
                 }
@@ -863,6 +873,7 @@ public class RenderPipelineScreen extends Screen {
                 ModuleNode newNode = new ModuleNode(module);
                 newNode.updateWidth(textRenderer);
                 nodes.add(newNode);
+                isDirty = true;
                 return true;
             }
             return false;
@@ -944,11 +955,12 @@ public class RenderPipelineScreen extends Screen {
     private void syncPresetToPipeline() {
         Pipeline.savePipeline();
         Pipeline.build();
+        isDirty = false;
         refreshPipeline();
     }
 
     private List<ClickableWidget> buildPresetWidgets(AttributeConfig cfg) {
-        return AttributeWidgetUtil.buildWidgets(cfg, textRenderer, 200, 64);
+        return AttributeWidgetUtil.buildWidgets(cfg, textRenderer, 200, 64, () -> isDirty = true);
     }
 
     private class PresetSelector {

@@ -84,42 +84,43 @@ final class AttributeWidgetUtil {
 
     static List<ClickableWidget> buildWidgets(AttributeConfig cfg, TextRenderer textRenderer,
         int width,
-        int vec3ComponentWidth) {
+        int vec3ComponentWidth, Runnable onChanged) {
         String type = cfg.type == null ? "" : cfg.type.toLowerCase(Locale.ROOT);
 
         if (type.startsWith("enum:")) {
-            return List.of(buildEnumWidget(cfg, cfg.type.substring(5), width));
+            return List.of(buildEnumWidget(cfg, cfg.type.substring(5), width, onChanged));
         }
 
         if (type.startsWith("int_range:")) {
-            return List.of(buildIntRange(cfg, cfg.type.substring(10), width));
+            return List.of(buildIntRange(cfg, cfg.type.substring(10), width, onChanged));
         }
 
         if (type.startsWith("float_range:")) {
-            return List.of(buildFloatRange(cfg, cfg.type.substring(12), width));
+            return List.of(buildFloatRange(cfg, cfg.type.substring(12), width, onChanged));
         }
 
         return switch (type) {
-            case "bool" -> List.of(buildBoolWidget(cfg, width));
-            case "int" -> List.of(buildIntWidget(cfg, textRenderer, width));
-            case "float" -> List.of(buildFloatWidget(cfg, textRenderer, width));
-            case "string" -> List.of(buildStringWidget(cfg, textRenderer, width));
-            case "vec3" -> buildVec3Widget(cfg, textRenderer, vec3ComponentWidth);
-            default -> List.of(buildStringWidget(cfg, textRenderer, width));
+            case "bool" -> List.of(buildBoolWidget(cfg, width, onChanged));
+            case "int" -> List.of(buildIntWidget(cfg, textRenderer, width, onChanged));
+            case "float" -> List.of(buildFloatWidget(cfg, textRenderer, width, onChanged));
+            case "string" -> List.of(buildStringWidget(cfg, textRenderer, width, onChanged));
+            case "vec3" -> buildVec3Widget(cfg, textRenderer, vec3ComponentWidth, onChanged);
+            default -> List.of(buildStringWidget(cfg, textRenderer, width, onChanged));
         };
     }
 
-    private static ClickableWidget buildBoolWidget(AttributeConfig cfg, int width) {
+    private static ClickableWidget buildBoolWidget(AttributeConfig cfg, int width, Runnable onChanged) {
         boolean b = "render_pipeline.true".equalsIgnoreCase(cfg.value);
         return ButtonWidget.builder(
             Text.translatable(b ? "render_pipeline.true" : "render_pipeline.false"), btn -> {
                 boolean nv = !"render_pipeline.true".equalsIgnoreCase(cfg.value);
                 cfg.value = nv ? "render_pipeline.true" : "render_pipeline.false";
                 btn.setMessage(Text.translatable(cfg.value));
+                onChanged.run();
             }).dimensions(0, 0, width, 20).build();
     }
 
-    private static ClickableWidget buildEnumWidget(AttributeConfig cfg, String raw, int width) {
+    private static ClickableWidget buildEnumWidget(AttributeConfig cfg, String raw, int width, Runnable onChanged) {
         String[] values = raw.isEmpty() ? new String[]{"<empty>"} : raw.split("-");
         int idx = 0;
         if (cfg.value != null) {
@@ -138,11 +139,12 @@ final class AttributeWidgetUtil {
             index[0] = (index[0] + 1) % values.length;
             cfg.value = values[index[0]];
             btn.setMessage(Text.translatable(cfg.value));
+            onChanged.run();
         }).dimensions(0, 0, width, 20).build();
     }
 
     private static ClickableWidget buildIntWidget(AttributeConfig cfg, TextRenderer textRenderer,
-        int width) {
+        int width, Runnable onChanged) {
         TextFieldWidget tf = new TextFieldWidget(textRenderer, 0, 0, width, 20, Text.empty());
         tf.setMaxLength(64);
         tf.setText(cfg.value == null ? "" : cfg.value);
@@ -150,13 +152,14 @@ final class AttributeWidgetUtil {
         tf.setChangedListener(text -> {
             if (isStrictInt(text)) {
                 cfg.value = text;
+                onChanged.run();
             }
         });
         return tf;
     }
 
     private static ClickableWidget buildFloatWidget(AttributeConfig cfg, TextRenderer textRenderer,
-        int width) {
+        int width, Runnable onChanged) {
         TextFieldWidget tf = new TextFieldWidget(textRenderer, 0, 0, width, 20, Text.empty());
         tf.setMaxLength(64);
         tf.setText(cfg.value == null ? "" : cfg.value);
@@ -167,23 +170,27 @@ final class AttributeWidgetUtil {
         tf.setChangedListener(text -> {
             if (isStrictFloat(text)) {
                 cfg.value = text;
+                onChanged.run();
             }
         });
         return tf;
     }
 
     private static ClickableWidget buildStringWidget(AttributeConfig cfg, TextRenderer textRenderer,
-        int width) {
+        int width, Runnable onChanged) {
         TextFieldWidget tf = new TextFieldWidget(textRenderer, 0, 0, width, 20, Text.empty());
         tf.setMaxLength(128);
         tf.setText(cfg.value == null ? "" : cfg.value);
-        tf.setChangedListener(text -> cfg.value = text);
+        tf.setChangedListener(text -> {
+            cfg.value = text;
+            onChanged.run();
+        });
         return tf;
     }
 
     private static List<ClickableWidget> buildVec3Widget(AttributeConfig cfg,
         TextRenderer textRenderer,
-        int componentWidth) {
+        int componentWidth, Runnable onChanged) {
         if (cfg.value == null || cfg.value.isEmpty()) {
             cfg.value = "0,0,0";
         }
@@ -200,6 +207,7 @@ final class AttributeWidgetUtil {
 
             if (isStrictFloat(sx) && isStrictFloat(sy) && isStrictFloat(sz)) {
                 cfg.value = sx + "," + sy + "," + sz;
+                onChanged.run();
             }
         };
 
@@ -222,7 +230,7 @@ final class AttributeWidgetUtil {
         return tf;
     }
 
-    private static ClickableWidget buildIntRange(AttributeConfig cfg, String raw, int width) {
+    private static ClickableWidget buildIntRange(AttributeConfig cfg, String raw, int width, Runnable onChanged) {
         Range r = parseRange(raw);
         int start = (int) r.start;
         int end = (int) r.end;
@@ -240,12 +248,12 @@ final class AttributeWidgetUtil {
         }
         cur = MathHelper.clamp(cur, start, end);
 
-        IntRangeSlider slider = new IntRangeSlider(0, 0, width, 20, start, end, cur, cfg);
+        IntRangeSlider slider = new IntRangeSlider(0, 0, width, 20, start, end, cur, cfg, onChanged);
         slider.updateMessage();
         return slider;
     }
 
-    private static ClickableWidget buildFloatRange(AttributeConfig cfg, String raw, int width) {
+    private static ClickableWidget buildFloatRange(AttributeConfig cfg, String raw, int width, Runnable onChanged) {
         Range r = parseRange(raw);
         float start = (float) r.start;
         float end = (float) r.end;
@@ -263,7 +271,7 @@ final class AttributeWidgetUtil {
         }
         cur = MathHelper.clamp(cur, start, end);
 
-        FloatRangeSlider slider = new FloatRangeSlider(0, 0, width, 20, start, end, cur, cfg);
+        FloatRangeSlider slider = new FloatRangeSlider(0, 0, width, 20, start, end, cur, cfg, onChanged);
         slider.updateMessage();
         return slider;
     }
@@ -336,14 +344,16 @@ final class AttributeWidgetUtil {
         private final int start;
         private final int end;
         private final AttributeConfig cfg;
+        private final Runnable onChanged;
 
         public IntRangeSlider(int x, int y, int width, int height, int start, int end, int cur,
-            AttributeConfig cfg) {
+            AttributeConfig cfg, Runnable onChanged) {
             super(x, y, width, height, Text.empty(),
                 (cur - (double) start) / (double) (end - start));
             this.start = start;
             this.end = end;
             this.cfg = cfg;
+            this.onChanged = onChanged;
             this.value = (cur - (double) start) / (double) (end - start);
         }
 
@@ -363,6 +373,7 @@ final class AttributeWidgetUtil {
         protected void applyValue() {
             int v = MathHelper.clamp(current(), start, end);
             cfg.value = Integer.toString(v);
+            onChanged.run();
         }
     }
 
@@ -371,14 +382,16 @@ final class AttributeWidgetUtil {
         private final float start;
         private final float end;
         private final AttributeConfig cfg;
+        private final Runnable onChanged;
 
         public FloatRangeSlider(int x, int y, int width, int height, float start, float end,
             float cur,
-            AttributeConfig cfg) {
+            AttributeConfig cfg, Runnable onChanged) {
             super(x, y, width, height, Text.empty(), (cur - start) / (double) (end - start));
             this.start = start;
             this.end = end;
             this.cfg = cfg;
+            this.onChanged = onChanged;
             this.value = (cur - start) / (double) (end - start);
         }
 
@@ -398,6 +411,7 @@ final class AttributeWidgetUtil {
         protected void applyValue() {
             float v = MathHelper.clamp(current(), start, end);
             cfg.value = formatTwoDecimals(v);
+            onChanged.run();
         }
     }
 }
