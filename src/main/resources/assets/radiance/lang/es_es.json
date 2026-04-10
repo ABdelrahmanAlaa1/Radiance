@@ -165,6 +165,6 @@
   "render_pipeline.mode.name": "Modo",
   "render_pipeline.mode.pipeline": "Pipeline",
   "render_pipeline.mode.preset": "Preset",
-  "render_pipeline.true": "Verdadero",
-  "render_pipeline.false": "Falso"
+  "render_pipeline.true": "Sí",
+  "render_pipeline.false": "No"
 }
