@@ -864,10 +864,15 @@ public class Pipeline {
     }
 
     public static void switchToPresetMode(String presetName) {
+        String processedPresetName = processPresetName(presetName);
+        if (INSTANCE.mode == PipelineMode.PRESET
+                && Objects.equals(INSTANCE.activePresetName, processedPresetName)) {
+            return;
+        }
+
         List<PresetStoredModule> carryOverModules = capturePresetModules();
 
         INSTANCE.mode = PipelineMode.PRESET;
-        String processedPresetName = processPresetName(presetName);
 
         // should set preset name properly
         assemblePreset(processedPresetName);
@@ -882,6 +887,35 @@ public class Pipeline {
 
         savePipeline();
         build();
+    }
+
+    /**
+     * Assembles preset pipeline data in memory for UI display only.
+     * Does NOT call build() or savePipeline() — call those explicitly when applying.
+     */
+    public static void preparePresetModeUI(String presetName) {
+        String processedPresetName = processPresetName(presetName);
+        if (INSTANCE.mode == PipelineMode.PRESET
+                && Objects.equals(INSTANCE.activePresetName, processedPresetName)) {
+            return;
+        }
+        List<PresetStoredModule> carryOverModules = capturePresetModules();
+        INSTANCE.mode = PipelineMode.PRESET;
+        assemblePreset(processedPresetName);
+        PipelineConfigStorage storage = loadConfigStorage();
+        if (storage != null && Objects.equals(storage.mode, PipelineMode.PRESET.name())
+                && Objects.equals(storage.presetName, INSTANCE.activePresetName)) {
+            applyPresetModuleOverrides(storage.presetModules);
+        }
+        applyPresetModuleOverrides(carryOverModules);
+    }
+
+    /**
+     * Sets pipeline mode to PIPELINE for UI display only.
+     * Does NOT call build() or savePipeline() — call those explicitly when applying.
+     */
+    public static void preparePipelineModeUI() {
+        INSTANCE.mode = PipelineMode.PIPELINE;
     }
 
     public static void assemblePreset(String presetName) {

@@ -137,11 +137,11 @@ public class RenderPipelineScreen extends Screen {
                     if (activePreset == null && !presets.isEmpty()) {
                         activePreset = presets.getFirst();
                     }
-                    Pipeline.switchToPresetMode(
+                    Pipeline.preparePresetModeUI(
                         activePreset != null ? activePreset.name() : "Default");
                     mode = Mode.PRESET;
                 } else {
-                    Pipeline.switchToPipelineMode();
+                    Pipeline.preparePipelineModeUI();
                     mode = Mode.PIPELINE;
                 }
                 rebuildUI();
@@ -201,7 +201,6 @@ public class RenderPipelineScreen extends Screen {
             if (activePreset == null && !presets.isEmpty()) {
                 activePreset = presets.get(0);
             }
-            Pipeline.switchToPresetMode(activePreset != null ? activePreset.name() : "Default");
             applyActivePreset();
         }
     }
@@ -209,7 +208,9 @@ public class RenderPipelineScreen extends Screen {
     public void refreshPipeline() {
         nodes.clear();
         for (Module module : Pipeline.INSTANCE.getModules()) {
-            nodes.add(new ModuleNode(module));
+            ModuleNode node = new ModuleNode(module);
+            node.updateWidth(textRenderer);
+            nodes.add(node);
         }
 
         moduleConnections.clear();
@@ -252,10 +253,6 @@ public class RenderPipelineScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        for (ModuleNode node : nodes) {
-            node.updateWidth(textRenderer);
-        }
-
         this.renderBackground(context, mouseX, mouseY, delta);
 
         context.getMatrices().push();
@@ -863,7 +860,9 @@ public class RenderPipelineScreen extends Screen {
                 Module module = selected.loadModule();
                 module.x = 100;
                 module.y = 100;
-                nodes.add(new ModuleNode(module));
+                ModuleNode newNode = new ModuleNode(module);
+                newNode.updateWidth(textRenderer);
+                nodes.add(newNode);
                 return true;
             }
             return false;
@@ -912,7 +911,7 @@ public class RenderPipelineScreen extends Screen {
             return;
         }
 
-        Pipeline.switchToPresetMode(activePreset.name());
+        Pipeline.preparePresetModeUI(activePreset.name());
 
         List<Module> modules = new ArrayList<>(Pipeline.INSTANCE.getModules());
 
@@ -925,6 +924,7 @@ public class RenderPipelineScreen extends Screen {
             for (AttributeConfig cfg : m.attributeConfigs) {
                 List<ClickableWidget> ws = buildPresetWidgets(cfg);
                 for (ClickableWidget w : ws) {
+                    w.visible = false;
                     presetWidgets.add(addDrawableChild(w));
                 }
                 block.rows.add(new PresetRow(cfg, ws));
@@ -989,7 +989,6 @@ public class RenderPipelineScreen extends Screen {
             if (index >= 0 && index < options.size()) {
                 activePreset = options.get(index);
                 presetScrollY = 0;
-                Pipeline.switchToPresetMode(activePreset != null ? activePreset.name() : "Default");
                 applyActivePreset();
                 return true;
             }
