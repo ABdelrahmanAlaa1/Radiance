@@ -54,6 +54,7 @@ public class RenderPipelineScreen extends Screen {
     private boolean isPanning = false;
 
     private Mode mode = Mode.PIPELINE;
+    private boolean isDirty = false;
     private final List<PresetEntry> presets = new ArrayList<>();
     private PresetEntry activePreset = null;
     private PresetSelector activePresetSelector = null;
@@ -63,7 +64,6 @@ public class RenderPipelineScreen extends Screen {
 
     private ButtonWidget modeToggleBtn;
     private ButtonWidget secondaryBtn;
-    private boolean isDirty = false;
 
     private static final String RENDER_PIPELINE_PRESET_NAME = "render_pipeline.preset.name";
     private static final String RENDER_PIPELINE_MODE_NAME = "render_pipeline.mode.name";
@@ -138,11 +138,11 @@ public class RenderPipelineScreen extends Screen {
                     if (activePreset == null && !presets.isEmpty()) {
                         activePreset = presets.getFirst();
                     }
-                    Pipeline.preparePresetModeUI(
+                    Pipeline.switchToPresetMode(
                         activePreset != null ? activePreset.name() : "Default");
                     mode = Mode.PRESET;
                 } else {
-                    Pipeline.preparePipelineModeUI();
+                    Pipeline.switchToPipelineMode();
                     mode = Mode.PIPELINE;
                 }
                 isDirty = false;
@@ -182,6 +182,7 @@ public class RenderPipelineScreen extends Screen {
                     } else {
                         syncPresetToPipeline();
                     }
+                    isDirty = false;
                 }).dimensions(secondaryX + secondaryW + 5, 6, 100, 20).build());
 
         ButtonWidget reloadBtn = addDrawableChild(
@@ -241,7 +242,6 @@ public class RenderPipelineScreen extends Screen {
         }
 
         Pipeline.build();
-        isDirty = false;
         refreshPipeline();
     }
 
@@ -474,7 +474,7 @@ public class RenderPipelineScreen extends Screen {
         context.drawTexture(RenderLayer::getGuiTextured, GEAR_TEX, gearX, btnY, 0, 0, btnSize,
             btnSize, btnSize, btnSize);
 
-        context.drawTextWithShadow(textRenderer, "×", deleteX + 3, btnY + 2, 0xFFFF5A5A);
+        context.drawTextWithShadow(textRenderer, "├ù", deleteX + 3, btnY + 2, 0xFFFF5A5A);
 
         for (int i = 0; i < moduleNode.rows(); i++) {
             int ry = y + moduleNode.headerH + moduleNode.pad + i * moduleNode.rowH + 7;
@@ -666,6 +666,7 @@ public class RenderPipelineScreen extends Screen {
             }
 
             if (button == 0 && isGearClicked(node, mouseX, mouseY)) {
+                isDirty = true;
                 MinecraftClient.getInstance()
                     .setScreen(new ModuleAttributeScreen(this, node.module));
                 return true;
@@ -688,7 +689,6 @@ public class RenderPipelineScreen extends Screen {
                     if (isConnected) {
                         moduleConnections.removeIf(
                             link -> link.src == current || link.dst == current);
-                        isDirty = true;
                     } else if (clickedOut != null) {
                         if (localFinalOutput != null && localFinalOutput != current) {
                             localFinalOutput.finalOutput = false;
@@ -696,7 +696,6 @@ public class RenderPipelineScreen extends Screen {
 
                         localFinalOutput = (localFinalOutput == current) ? null : current;
                         current.finalOutput = (localFinalOutput == current);
-                        isDirty = true;
                     }
                     return true;
                 }
@@ -870,9 +869,7 @@ public class RenderPipelineScreen extends Screen {
                 Module module = selected.loadModule();
                 module.x = 100;
                 module.y = 100;
-                ModuleNode newNode = new ModuleNode(module);
-                newNode.updateWidth(textRenderer);
-                nodes.add(newNode);
+                nodes.add(new ModuleNode(module));
                 isDirty = true;
                 return true;
             }
@@ -922,7 +919,7 @@ public class RenderPipelineScreen extends Screen {
             return;
         }
 
-        Pipeline.preparePresetModeUI(activePreset.name());
+        Pipeline.switchToPresetMode(activePreset.name());
 
         List<Module> modules = new ArrayList<>(Pipeline.INSTANCE.getModules());
 
@@ -935,7 +932,6 @@ public class RenderPipelineScreen extends Screen {
             for (AttributeConfig cfg : m.attributeConfigs) {
                 List<ClickableWidget> ws = buildPresetWidgets(cfg);
                 for (ClickableWidget w : ws) {
-                    w.visible = false;
                     presetWidgets.add(addDrawableChild(w));
                 }
                 block.rows.add(new PresetRow(cfg, ws));
@@ -955,7 +951,6 @@ public class RenderPipelineScreen extends Screen {
     private void syncPresetToPipeline() {
         Pipeline.savePipeline();
         Pipeline.build();
-        isDirty = false;
         refreshPipeline();
     }
 
@@ -1001,6 +996,7 @@ public class RenderPipelineScreen extends Screen {
             if (index >= 0 && index < options.size()) {
                 activePreset = options.get(index);
                 presetScrollY = 0;
+                Pipeline.switchToPresetMode(activePreset != null ? activePreset.name() : "Default");
                 applyActivePreset();
                 return true;
             }
