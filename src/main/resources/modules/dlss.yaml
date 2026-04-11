@@ -25,3 +25,6 @@ attributeConfigs:
   - name: "render_pipeline.module.dlss.attribute.mode"
     type: "enum:render_pipeline.module.dlss.attribute.mode.ultra_performance-render_pipeline.module.dlss.attribute.mode.performance-render_pipeline.module.dlss.attribute.mode.balanced-render_pipeline.module.dlss.attribute.mode.quality-render_pipeline.module.dlss.attribute.mode.dlaa"
     value: "render_pipeline.module.dlss.attribute.mode.balanced"
+  - name: "render_pipeline.module.dlss.attribute.frame_generation"
+    type: "enum:render_pipeline.module.dlss.attribute.frame_generation.off-render_pipeline.module.dlss.attribute.frame_generation.on"
+    value: "render_pipeline.module.dlss.attribute.frame_generation.off"

@@ -33,6 +33,9 @@ public class Options {
     public static final String DLSS_MODE_DLAA = "options.video.dlss_mode.dlaa";
 
     public static final String DLSS_MODE_KEY = "options.video.dlss_mode";
+    public static final String DLSS_FRAME_GEN_KEY = "options.video.dlss_frame_gen";
+    public static final String DLSS_FRAME_GEN_ON = "options.video.dlss_frame_gen.on";
+    public static final String DLSS_FRAME_GEN_OFF = "options.video.dlss_frame_gen.off";
     public static final String UPSCALER_TYPE_KEY = "options.video.upscaler_type";
     public static final String UPSCALER_QUALITY_KEY = "options.video.upscaler_quality";
     public static final String DENOISER_MODE_KEY = "options.video.denoiser_mode";
