@@ -26,5 +26,5 @@ attributeConfigs:
     type: "enum:render_pipeline.module.dlss.attribute.mode.ultra_performance-render_pipeline.module.dlss.attribute.mode.performance-render_pipeline.module.dlss.attribute.mode.balanced-render_pipeline.module.dlss.attribute.mode.quality-render_pipeline.module.dlss.attribute.mode.dlaa"
     value: "render_pipeline.module.dlss.attribute.mode.balanced"
   - name: "render_pipeline.module.dlss.attribute.frame_generation"
-    type: "enum:render_pipeline.module.dlss.attribute.frame_generation.off-render_pipeline.module.dlss.attribute.frame_generation.x2-render_pipeline.module.dlss.attribute.frame_generation.x3-render_pipeline.module.dlss.attribute.frame_generation.x4-render_pipeline.module.dlss.attribute.frame_generation.x5-render_pipeline.module.dlss.attribute.frame_generation.x6-render_pipeline.module.dlss.attribute.frame_generation.auto"
+    type: "enum:render_pipeline.module.dlss.attribute.frame_generation.off-render_pipeline.module.dlss.attribute.frame_generation.x2-render_pipeline.module.dlss.attribute.frame_generation.x3-render_pipeline.module.dlss.attribute.frame_generation.x4-render_pipeline.module.dlss.attribute.frame_generation.x5-render_pipeline.module.dlss.attribute.frame_generation.x6-render_pipeline.module.dlss.attribute.frame_generation.dynamic"
     value: "render_pipeline.module.dlss.attribute.frame_generation.off"
