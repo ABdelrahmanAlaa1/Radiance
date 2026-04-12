@@ -38,6 +38,9 @@ public class Options {
     public static final String DLSS_FRAME_GEN_X2 = "options.video.dlss_frame_gen.x2";
     public static final String DLSS_FRAME_GEN_X3 = "options.video.dlss_frame_gen.x3";
     public static final String DLSS_FRAME_GEN_X4 = "options.video.dlss_frame_gen.x4";
+    public static final String DLSS_FRAME_GEN_X5 = "options.video.dlss_frame_gen.x5";
+    public static final String DLSS_FRAME_GEN_X6 = "options.video.dlss_frame_gen.x6";
+    public static final String DLSS_FRAME_GEN_AUTO = "options.video.dlss_frame_gen.auto";
     public static final String UPSCALER_TYPE_KEY = "options.video.upscaler_type";
     public static final String UPSCALER_QUALITY_KEY = "options.video.upscaler_quality";
     public static final String DENOISER_MODE_KEY = "options.video.denoiser_mode";
